@@ -2,7 +2,7 @@ import pytest
 from PIL import ImageColor
 from pydantic.error_wrappers import ValidationError
 
-from string_avatar.avatars import BaseAvatar
+from string_avatar.avatars import BaseAvatar, CharAvatar
 
 
 class TestBaseAvatar:
@@ -17,6 +17,8 @@ class TestBaseAvatar:
         assert avatar.bgcolor == "black"
         assert avatar.font_path.endswith("GentiumPlus-R.ttf")
         assert avatar.font_color == "white"
+        assert avatar.font_outline_width == 0
+        assert avatar.font_outline_color is None
 
         # test passing values
         avatar = BaseAvatar(
@@ -25,11 +27,15 @@ class TestBaseAvatar:
             bgcolor="#fff",
             font_path="test.ttf",
             font_color="black",
+            font_outline_width=5,
+            font_outline_color="blue",
         )
         assert avatar.size == 600
         assert avatar.bgcolor == "#fff"
         assert avatar.font_path.endswith("test.ttf")
         assert avatar.font_color == "black"
+        assert avatar.font_outline_width == 5
+        assert avatar.font_outline_color == "blue"
 
     def test_draw_letter(self):
         """Tests that a letter is drawn on the image"""
@@ -67,3 +73,31 @@ class TestBaseAvatar:
         bgcolor = ImageColor.getrgb(avatar.bgcolor)
         img_color = img.getpixel((0, 0))
         assert img_color == bgcolor
+
+
+class TestCharAvatar:
+    def test_generated_values(self):
+        """Tests calculated colors against known values"""
+        avatar = CharAvatar(string="test")
+
+        assert avatar.bgcolor == "#77007f"
+        assert avatar.font_color == "#ee00ff"
+        assert avatar.font_outline_color == "white"
+        assert avatar.font_outline_width == 2
+
+    def test_overriding_values(self):
+        """Tests that passing kwargs overrides calculated values"""
+        avatar = CharAvatar(
+            string="test",
+            size=500,
+            bgcolor="black",
+            font_color="magenta",
+            font_outline_color="#fff",
+            font_outline_width=5,
+        )
+
+        assert avatar.size == 500
+        assert avatar.bgcolor == "black"
+        assert avatar.font_color == "magenta"
+        assert avatar.font_outline_color == "#fff"
+        assert avatar.font_outline_width == 5
